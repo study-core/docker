@@ -955,6 +955,7 @@ func (daemon *Daemon) tryDetachContainerFromClusterNetwork(network libnetwork.Ne
 	daemon.LogNetworkEventWithAttributes(network, "disconnect", attributes)
 }
 
+// 初始化 contaner 的网络配置
 func (daemon *Daemon) initializeNetworking(container *container.Container) error {
 	var err error
 

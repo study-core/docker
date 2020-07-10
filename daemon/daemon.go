@@ -566,6 +566,8 @@ func (daemon *Daemon) restore() error {
 
 // RestartSwarmContainers restarts any autostart container which has a
 // swarm endpoint.
+//
+// RestartSwarmContainers: 重新启动所有具有swarm端点的自动启动容器.
 func (daemon *Daemon) RestartSwarmContainers() {
 	ctx := context.Background()
 
@@ -579,11 +581,16 @@ func (daemon *Daemon) RestartSwarmContainers() {
 	var group sync.WaitGroup
 	sem := semaphore.NewWeighted(int64(parallelLimit))
 
+	// 返回在守护程序中注册的所有容器的数组.
+	//
+	//
 	for _, c := range daemon.List() {
 		if !c.IsRunning() && !c.IsPaused() {
 			// Autostart all the containers which has a
 			// swarm endpoint now that the cluster is
 			// initialized.
+			//
+			// 集群初始化后, 自动启动所有具有群集端点的容器.
 			if daemon.configStore.AutoRestart && c.ShouldRestart() && c.NetworkSettings.HasSwarmEndpoint && c.HasBeenStartedBefore {
 				group.Add(1)
 				go func(c *container.Container) {
@@ -593,6 +600,7 @@ func (daemon *Daemon) RestartSwarmContainers() {
 						return
 					}
 
+					// todo 这里就是  Docker Daemon 启动 Docker  Container 的入口了
 					if err := daemon.containerStart(c, "", "", true); err != nil {
 						logrus.Error(err)
 					}
@@ -1247,6 +1255,8 @@ func (daemon *Daemon) Shutdown() error {
 
 // Mount sets container.BaseFS
 // (is it not set coming in? why is it unset?)
+//
+// 挂载设置 container.BaseFS (是否没有设置? 为什么不设置?)
 func (daemon *Daemon) Mount(container *container.Container) error {
 	if container.RWLayer == nil {
 		return errors.New("RWLayer of container " + container.ID + " is unexpectedly nil")
@@ -1467,8 +1477,12 @@ func (daemon *Daemon) PluginGetter() *plugin.Store {
 }
 
 // CreateDaemonRoot creates the root for the daemon
+//
+// 创建守护程序根目录 (root目录)
 func CreateDaemonRoot(config *config.Config) error {
 	// get the canonical path to the Docker root directory
+	//
+	// 获取Docker根目录的规范路径
 	var realRoot string
 	if _, err := os.Stat(config.Root); err != nil && os.IsNotExist(err) {
 		realRoot = config.Root

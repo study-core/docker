@@ -102,6 +102,11 @@ func (daemon *Daemon) ContainerStart(name string, hostConfig *containertypes.Hos
 // container needs, such as storage and networking, as well as links
 // between containers. The container is left waiting for a signal to
 // begin running.
+//
+//
+// containerStart:
+//		通过设置容器所需的一切 (例如 `存储` 和 `网络` 以及 `容器之间的链接`) 来准备运行容器.
+//		容器将等待信号开始运行.
 func (daemon *Daemon) containerStart(container *container.Container, checkpoint string, checkpointDir string, resetRestartManager bool) (err error) {
 	start := time.Now()
 	container.Lock()
@@ -146,14 +151,17 @@ func (daemon *Daemon) containerStart(container *container.Container, checkpoint 
 		}
 	}()
 
+	// conditionalMountOnStart: 是容器开始调用安装过程中特定于平台的帮助程序功能
 	if err := daemon.conditionalMountOnStart(container); err != nil {
 		return err
 	}
 
+	// 初始化 contaner 的网络配置
 	if err := daemon.initializeNetworking(container); err != nil {
 		return err
 	}
 
+	// 创建各个选项的 回调 func
 	spec, err := daemon.createSpec(container)
 	if err != nil {
 		return errdefs.System(err)
@@ -187,6 +195,48 @@ func (daemon *Daemon) containerStart(container *container.Container, checkpoint 
 		return err
 	}
 
+
+
+	// todo #########################################################
+	// 		#########################################################
+	//      #####################               #####################
+	//      #####################  Containerd:  #####################
+	//		#####################               #####################
+	//		#########################################################
+	//		#########################################################
+	//	todo
+	//     	是一个工业标准的容器运行时, 重点是它简洁, 健壮, 便携,可移植性.
+	//     	在Linux和window上可以作为一个守护进程运行,
+	//     	它可以管理 `宿主机` 系统上容器的完整的生命周期：
+	//     	镜像传输和存储,容器的执行和监控, 低级别的存储和网络.
+	//	   	containerd 和 docker不同,
+	//	   	containerd 重点是继承在大规模的系统中,
+	//	   	例如kubernetes, 而不是面向开发者, 让开发者使用,
+	//	   	更多的是容器运行时的概念, 承载容器运行.
+
+	// todo docker 对容器的管理和操作基本都是通过 containerd 完成的.
+
+	// todo containerd是容器虚拟化技术, 从docker中剥离出来,
+	//      形成开放容器接口 (OCI) 标准的一部分.
+
+
+	//	todo 详细点说，Containerd 负责干下面这些事情：
+	//
+	//	• 管理容器的生命周期(从创建容器到销毁容器)
+	//
+	//	• 拉取/推送容器镜像
+	//
+	//	• 存储管理(管理镜像及容器数据的存储)
+	//
+	//	• 调用 runC 运行容器(与 runC 等容器运行时交互)
+	//
+	//	• 管理容器网络接口及网络
+	//
+	//	todo 注意：Containerd 被应设计成嵌入到一个更大的系统中, 而不是直接由开发人员或终端用户使用.
+
+
+	//
+	// TODO 使用 `containerd` 创建 容器实例
 	err = daemon.containerd.Create(ctx, container.ID, spec, createOptions, withImageName(imageRef.String()))
 	if err != nil {
 		if errdefs.IsConflict(err) {

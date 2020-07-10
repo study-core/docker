@@ -47,6 +47,8 @@ func getDefaultDaemonConfigFile() (string, error) {
 
 // setDefaultUmask sets the umask to 0022 to avoid problems
 // caused by custom umask
+//
+// setDefaultUmask: 将umask设置为0022, 以避免由自定义umask引起的问题.
 func setDefaultUmask() error {
 	desiredUmask := 0022
 	unix.Umask(desiredUmask)

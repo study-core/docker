@@ -21,3 +21,5 @@ vendor/pkg/
 go-test-report.json
 profile.out
 junit-report.xml
+
+.idea/

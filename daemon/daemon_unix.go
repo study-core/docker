@@ -1390,12 +1390,17 @@ func (daemon *Daemon) registerLinks(container *container.Container, hostConfig *
 
 // conditionalMountOnStart is a platform specific helper function during the
 // container start to call mount.
+//
+// conditionalMountOnStart:
+//			是容器开始调用安装过程中特定于平台的帮助程序功能
 func (daemon *Daemon) conditionalMountOnStart(container *container.Container) error {
+	// 挂载设置 container.BaseFS (是否没有设置? 为什么不设置?)
 	return daemon.Mount(container)
 }
 
 // conditionalUnmountOnCleanup is a platform specific helper function called
 // during the cleanup of a container to unmount.
+//
 func (daemon *Daemon) conditionalUnmountOnCleanup(container *container.Container) error {
 	return daemon.Unmount(container)
 }

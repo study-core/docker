@@ -257,6 +257,11 @@ func unregisterService() error {
 // initService is the entry point for running the daemon as a Windows
 // service. It returns an indication to stop (if registering/un-registering);
 // an indication of whether it is running as a service; and an error.
+//
+// initService: 是将守护程序 <Docker Daemon> 作为Windows服务运行的入口点.
+//				它返回一个停止指示(如果正在注册/注销);
+//				指示它是否作为服务运行;
+//				和一个错误.
 func initService(daemonCli *DaemonCli) (bool, bool, error) {
 	if *flUnregisterService {
 		if *flRegisterService {

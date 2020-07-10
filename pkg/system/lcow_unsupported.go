@@ -9,6 +9,8 @@ import (
 )
 
 // InitLCOW does nothing since LCOW is a windows only feature
+//
+// 由于LCOW仅是Windows功能，因此InitLCOW不会执行任何操作
 func InitLCOW(_ bool) {}
 
 // LCOWSupported returns true if Linux containers on Windows are supported.

@@ -55,6 +55,8 @@ const (
 var errStopIteration = errors.New("container list iteration stopped")
 
 // List returns an array of all containers registered in the daemon.
+//
+// List: 返回在守护程序中注册的所有容器的数组.
 func (daemon *Daemon) List() []*container.Container {
 	return daemon.containers.List()
 }

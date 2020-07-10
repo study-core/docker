@@ -63,6 +63,7 @@ type DaemonCli struct {
 	configFile *string
 	flags      *pflag.FlagSet
 
+	//
 	api             *apiserver.Server
 	d               *daemon.Daemon
 	authzMiddleware *authorization.Middleware // authzMiddleware enables to dynamically reload the authorization plugins
@@ -73,6 +74,8 @@ func NewDaemonCli() *DaemonCli {
 	return &DaemonCli{}
 }
 
+
+// 启动 Docker Daemon Cli 的入口 (linux)
 func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 	stopc := make(chan bool)
 	defer close(stopc)
@@ -112,18 +115,26 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 	}
 
 	// return human-friendly error before creating files
+	//
+	// 在创建文件之前返回人类友好的错误
 	if runtime.GOOS == "linux" && os.Geteuid() != 0 {
 		return fmt.Errorf("dockerd needs to be started with root. To see how to run dockerd in rootless mode with unprivileged user, see the documentation")
 	}
 
+	// 由于LCOW仅是Windows功能，因此InitLCOW不会执行任何操作
 	system.InitLCOW(cli.Config.Experimental)
 
+	// setDefaultUmask: 将umask设置为0022, 以避免由自定义umask引起的问题
 	if err := setDefaultUmask(); err != nil {
 		return err
 	}
 
 	// Create the daemon root before we create ANY other files (PID, or migrate keys)
 	// to ensure the appropriate ACL is set (particularly relevant on Windows)
+	//
+	// 在创建任何其他文件 (PID或迁移密钥) 之前,
+	// 请先创建守护程序根目录 (root目录),
+	// 以确保设置了适当的ACL (在Windows上尤其相关)
 	if err := daemon.CreateDaemonRoot(cli.Config); err != nil {
 		return err
 	}
@@ -159,8 +170,12 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 	if err != nil {
 		return errors.Wrap(err, "failed to create API server")
 	}
+
+	// 创建 cli 的api
 	cli.api = apiserver.New(serverConfig)
 
+
+	// 加载 所有 监听 的 hosts
 	hosts, err := loadListeners(cli, serverConfig)
 	if err != nil {
 		return errors.Wrap(err, "failed to load listeners")
@@ -177,12 +192,15 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 	}
 	defer cancel()
 
+	// todo 执行  linux 的 trap
 	signal.Trap(func() {
 		cli.stop()
 		<-stopc // wait for daemonCli.start() to return
 	}, logrus.StandardLogger())
 
 	// Notify that the API is active, but before daemon is set up.
+	//
+	// 在设置守护程序之前，通知该API已激活
 	preNotifySystem()
 
 	pluginStore := plugin.NewStore()
@@ -191,6 +209,7 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 		logrus.Fatalf("Error creating middlewares: %v", err)
 	}
 
+	// daemon 实例
 	d, err := daemon.NewDaemon(ctx, cli.Config, pluginStore)
 	if err != nil {
 		return errors.Wrap(err, "failed to start daemon")
@@ -199,6 +218,8 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 	d.StoreHosts(hosts)
 
 	// validate after NewDaemon has restored enabled plugins. Don't change order.
+	//
+	// 在NewDaemon恢复已启用的插件后进行验证. 不要改变顺序.
 	if err := validateAuthzPlugins(cli.Config.AuthorizationPlugins, pluginStore); err != nil {
 		return errors.Wrap(err, "failed to validate authorization plugin")
 	}
@@ -217,6 +238,8 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 	// Restart all autostart containers which has a swarm endpoint
 	// and is not yet running now that we have successfully
 	// initialized the cluster.
+	//
+	// 现在, 我们已经成功初始化了集群, 请重新启动所有具有群集端点并且尚未运行的自动启动容器.
 	d.RestartSwarmContainers()
 
 	logrus.Info("Daemon has completed initialization")
@@ -248,6 +271,7 @@ func (cli *DaemonCli) start(opts *daemonOptions) (err error) {
 	errAPI := <-serveAPIWait
 	c.Cleanup()
 
+	// 停掉 daemon 进程
 	shutdownDaemon(d)
 
 	// Stop notification processing and any background processes
@@ -343,7 +367,9 @@ func (cli *DaemonCli) reloadConfig() {
 	}
 }
 
+// 停止 DockerService Daemon Cli
 func (cli *DaemonCli) stop() {
+	// todo  当 Docker  Daemon 退出的时候, 停掉 所有与之相连的 Docker服务
 	cli.api.Close()
 }
 

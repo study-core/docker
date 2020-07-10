@@ -9,11 +9,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// daemon 的主入口 (windows)
 func runDaemon(opts *daemonOptions) error {
+
+	// 初始化一个 cli 实例
 	daemonCli := NewDaemonCli()
 
 	// On Windows, this may be launching as a service or with an option to
 	// register the service.
+	//
+	// 在Windows上，这可能作为服务启动，或者带有注册服务的选项
 	stop, runAsService, err := initService(daemonCli)
 	if err != nil {
 		logrus.Fatal(err)
@@ -34,6 +39,8 @@ func runDaemon(opts *daemonOptions) error {
 		opts.daemonConfig.Pidfile = filepath.Join(opts.daemonConfig.Root, "docker.pid")
 	}
 
+
+	// 启动 cli
 	err = daemonCli.start(opts)
 	notifyShutdown(err)
 	return err

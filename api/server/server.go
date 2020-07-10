@@ -31,6 +31,8 @@ type Config struct {
 }
 
 // Server contains instance details for the server
+//
+// Server 包含服务器的实例详细信息
 type Server struct {
 	cfg         *Config
 	servers     []*HTTPServer
@@ -66,7 +68,11 @@ func (s *Server) Accept(addr string, listeners ...net.Listener) {
 }
 
 // Close closes servers and thus stop receiving requests
+//
+// Close: 关闭服务器, 因此停止接收请求
 func (s *Server) Close() {
+
+	// 逐个 停掉 Docker 服务 (容器)
 	for _, srv := range s.servers {
 		if err := srv.Close(); err != nil {
 			logrus.Error(err)
@@ -113,6 +119,8 @@ func (s *HTTPServer) Serve() error {
 }
 
 // Close closes the HTTPServer from listening for the inbound requests.
+//
+// Close: 将关闭HTTPServer侦听入站请求
 func (s *HTTPServer) Close() error {
 	return s.l.Close()
 }

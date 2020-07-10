@@ -1000,11 +1000,14 @@ func WithUser(c *container.Container) coci.SpecOpts {
 	}
 }
 
+//
 func (daemon *Daemon) createSpec(c *container.Container) (retSpec *specs.Spec, err error) {
 	var (
-		opts []coci.SpecOpts
+		opts []coci.SpecOpts // SpecOpts将规范特定信息设置为新生成的OCI规范
 		s    = oci.DefaultSpec()
 	)
+
+	// 开始注册 各种 选项的回调func
 	opts = append(opts,
 		WithCommonOptions(daemon, c),
 		WithCgroups(daemon, c),
